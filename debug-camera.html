@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera Test - Debug</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .test-section {
+      background: #333;
+      border: 1px solid #555;
+      padding: 20px;
+      margin: 10px 0;
+      border-radius: 8px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .test-title {
+      font-weight: bold;
+      color: #00BCD4;
+      margin-bottom: 10px;
+    }
+    .test-result {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background: #4CAF50;
+      color: white;
+    }
+    .error {
+      background: #FF5252;
+      color: white;
+    }
+    .warning {
+      background: #FF9800;
+      color: white;
+    }
+    .info {
+      background: #2196F3;
+      color: white;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 3px solid #00BCD4;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    button {
+      background: #00BCD4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0097A7;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Camera Debug Test</h1>
+
+  <!-- Test 1: Browser Support -->
+  <div class="test-section">
+    <div class="test-title">1. Browser Support</div>
+    <div id="browser-test"></div>
+  </div>
+
+  <!-- Test 2: Media Devices -->
+  <div class="test-section">
+    <div class="test-title">2. Media Devices Available</div>
+    <div id="devices-test"></div>
+    <button onclick="enumerateDevices()">List Cameras</button>
+  </div>
+
+  <!-- Test 3: Camera Access -->
+  <div class="test-section">
+    <div class="test-title">3. Camera Access Test</div>
+    <button onclick="testCamera()">Request Camera Access</button>
+    <div id="camera-test"></div>
+    <video id="test-video" style="display:none;"></video>
+  </div>
+
+  <!-- Test 4: Video Element -->
+  <div class="test-section">
+    <div class="test-title">4. Video Element Status</div>
+    <div id="video-test"></div>
+  </div>
+
+  <!-- Test 5: Face-API -->
+  <div class="test-section">
+    <div class="test-title">5. Face-API Library</div>
+    <script defer src="https://unpkg.com/face-api.js"></script>
+    <button onclick="checkFaceAPI()">Check Face-API</button>
+    <div id="faceapi-test"></div>
+  </div>
+
+  <!-- Test 6: Console Logs -->
+  <div class="test-section">
+    <div class="test-title">6. Console Output</div>
+    <pre id="console-output" style="text-align: left; background: #1a1a1a; padding: 10px; border-radius: 4px; overflow-y: auto; height: 200px;"></pre>
+    <button onclick="clearLogs()">Clear Logs</button>
+  </div>
+
+  <script>
+    const logs = [];
+
+    // Override console.log to capture logs
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = function(...args) {
+      originalLog(...args);
+      addLog('LOG', args.join(' '));
+    };
+
+    console.error = function(...args) {
+      originalError(...args);
+      addLog('ERROR', args.join(' '));
+    };
+
+    console.warn = function(...args) {
+      originalWarn(...args);
+      addLog('WARN', args.join(' '));
+    };
+
+    function addLog(type, message) {
+      const timestamp = new Date().toLocaleTimeString();
+      logs.push(`[${timestamp}] ${type}: ${message}`);
+      updateLogs();
+    }
+
+    function updateLogs() {
+      const output = document.getElementById('console-output');
+      output.textContent = logs.join('\n');
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function clearLogs() {
+      logs.length = 0;
+      updateLogs();
+    }
+
+    // Test 1: Browser Support
+    function testBrowser() {
+      const result = document.getElementById('browser-test');
+      const userAgent = navigator.userAgent;
+      
+      let browserName = 'Unknown';
+      if (userAgent.indexOf('Edge') > -1) browserName = 'Edge';
+      else if (userAgent.indexOf('Chrome') > -1) browserName = 'Chrome';
+      else if (userAgent.indexOf('Safari') > -1) browserName = 'Safari';
+      else if (userAgent.indexOf('Firefox') > -1) browserName = 'Firefox';
+
+      const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      
+      result.innerHTML = `
+        <div class="test-result ${hasGetUserMedia ? 'success' : 'error'}">
+          Browser: ${browserName}<br>
+          getUserMedia: ${hasGetUserMedia ? '✓ Supported' : '✗ Not Supported'}
+        </div>
+      `;
+
+      console.log(`Browser: ${browserName}, getUserMedia: ${hasGetUserMedia}`);
+    }
+
+    // Test 2: Enumerate Devices
+    function enumerateDevices() {
+      const result = document.getElementById('devices-test');
+      result.innerHTML = '<div class="test-result info">Checking devices...</div>';
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        result.innerHTML = '<div class="test-result error">enumerateDevices not supported</div>';
+        return;
+      }
+
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          let html = '';
+          let cameras = 0;
+          devices.forEach(device => {
+            if (device.kind === 'videoinput') {
+              cameras++;
+              html += `<div class="test-result success">📷 Camera: ${device.label || 'Unknown Camera'}</div>`;
+            }
+          });
+
+          if (cameras === 0) {
+            html = '<div class="test-result error">❌ No cameras found</div>';
+          }
+
+          result.innerHTML = html || '<div class="test-result warning">⚠️ Could not detect cameras</div>';
+          console.log(`Found ${cameras} camera(s)`);
+        })
+        .catch(err => {
+          result.innerHTML = `<div class="test-result error">Error enumerating devices: ${err.message}</div>`;
+          console.error('Error:', err);
+        });
+    }
+
+    // Test 3: Camera Access
+    function testCamera() {
+      const result = document.getElementById('camera-test');
+      const video = document.getElementById('test-video');
+      result.innerHTML = '<div class="test-result info">Requesting camera...</div>';
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+          video.style.display = 'block';
+          result.innerHTML = '<div class="test-result success">✓ Camera access granted!<br><small>Video should appear above</small></div>';
+          console.log('Camera access granted');
+
+          // Stop stream after test
+          setTimeout(() => {
+            stream.getTracks().forEach(track => track.stop());
+          }, 5000);
+        })
+        .catch(err => {
+          let message = err.message;
+          if (err.name === 'NotAllowedError') message = 'Permission denied - check browser settings';
+          else if (err.name === 'NotFoundError') message = 'No camera found on device';
+          else if (err.name === 'NotReadableError') message = 'Camera already in use by another app';
+
+          result.innerHTML = `<div class="test-result error">✗ ${err.name}: ${message}</div>`;
+          console.error('Camera Error:', err.name, message);
+        });
+    }
+
+    // Test 4: Video Element
+    function testVideoElement() {
+      const video = document.querySelector('video');
+      const result = document.getElementById('video-test');
+      
+      let status = 'Ready';
+      let readyState = 'N/A';
+      
+      if (video) {
+        readyState = video.readyState; // 0=nothing, 4=enough data
+        status = video.srcObject ? 'Stream attached' : 'No stream';
+      }
+
+      result.innerHTML = `<div class="test-result info">
+        Video Element: ${video ? '✓ Found' : '✗ Not Found'}<br>
+        Status: ${status}<br>
+        Ready State: ${readyState} (0=nothing, 1=metadata, 2=current, 3=future, 4=enough)
+      </div>`;
+    }
+
+    // Test 5: Face-API
+    function checkFaceAPI() {
+      const result = document.getElementById('faceapi-test');
+
+      if (typeof faceapi === 'undefined') {
+        result.innerHTML = '<div class="test-result error">✗ Face-API not loaded</div>';
+        console.error('Face-API not loaded');
+        return;
+      }
+
+      // Check models
+      const models = [
+        'tinyFaceDetector',
+        'faceExpressionNet',
+        'ageGenderNet'
+      ];
+
+      let html = '<div class="test-result success">✓ Face-API loaded</div>';
+
+      models.forEach(model => {
+        const hasModel = !!(faceapi.nets && faceapi.nets[model]);
+        html += `<div class="test-result ${hasModel ? 'success' : 'warning'}">
+          ${model}: ${hasModel ? '✓ Available' : '⚠️ Not loaded yet'}
+        </div>`;
+      });
+
+      result.innerHTML = html;
+      console.log('Face-API Status:', typeof faceapi);
+    }
+
+    // Run tests on load
+    window.addEventListener('load', () => {
+      console.log('=== Camera Debug Test Started ===');
+      testBrowser();
+      testVideoElement();
+      checkFaceAPI();
+    });
+  </script>
+</body>
+</html>

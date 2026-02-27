@@ -1,0 +1,39 @@
+{
+  "models": {
+    "emotion_model": {
+      "name": "Emotion Detection Model",
+      "type": "tensorflow.js",
+      "path": "./models/emotion_model/model.json",
+      "enabled": true,
+      "config": {
+        "input_size": 48,
+        "num_classes": 7,
+        "batch_size": 1
+      }
+    },
+    "face_detection_model": {
+      "name": "Face Detection Model",
+      "type": "tensorflow.js",
+      "path": "./models/face_detection/model.json",
+      "enabled": false,
+      "config": {
+        "input_size": 224,
+        "confidence_threshold": 0.5
+      }
+    }
+  },
+  "emotions": [
+    "angry",
+    "disgusted",
+    "fearful",
+    "happy",
+    "neutral",
+    "sad",
+    "surprised"
+  ],
+  "settings": {
+    "use_gpu": true,
+    "benchmark": false,
+    "debug": false
+  }
+}

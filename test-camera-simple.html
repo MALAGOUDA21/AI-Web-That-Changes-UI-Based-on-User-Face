@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Camera Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .box {
+      background: #333;
+      border: 2px solid #00BCD4;
+      padding: 20px;
+      margin: 15px auto;
+      max-width: 500px;
+      border-radius: 8px;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #00BCD4;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    button {
+      background: #00BCD4;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+      margin: 5px;
+    }
+    button:hover { background: #0097A7; }
+    .success { color: #4CAF50; }
+    .error { color: #FF5252; }
+    .warning { color: #FF9800; }
+  </style>
+</head>
+<body>
+  <h1>🎥 Quick Camera Test</h1>
+
+  <div class="box">
+    <h2>Test 1: Check if Camera Works</h2>
+    <button onclick="testBasicCamera()">Click: Test Camera</button>
+    <div id="result1"></div>
+    <video id="testVideo" style="display:none;"></video>
+  </div>
+
+  <div class="box">
+    <h2>Test 2: List Available Cameras</h2>
+    <button onclick="listCameras()">Click: List Cameras</button>
+    <div id="result2"></div>
+  </div>
+
+  <div class="box">
+    <h2>Test 3: Check Browser Support</h2>
+    <button onclick="checkBrowser()">Click: Check Compatibility</button>
+    <div id="result3"></div>
+  </div>
+
+  <div class="box">
+    <h2>📋 Instructions if Camera Not Opening:</h2>
+    <ol style="text-align: left;">
+      <li><strong>Allow Camera Permission:</strong> Look for 🔒 lock icon in address bar → Click → Allow Camera</li>
+      <li><strong>Close Other Apps:</strong> Close Zoom, Teams, Skype if open</li>
+      <li><strong>Restart Browser:</strong> Close and reopen browser</li>
+      <li><strong>Check Windows:</strong> Settings → Privacy & Security → Camera (make sure enabled)</li>
+    </ol>
+  </div>
+
+  <script>
+    function testBasicCamera() {
+      const result = document.getElementById('result1');
+      const video = document.getElementById('testVideo');
+      
+      result.innerHTML = '<p>Requesting camera...</p>';
+      
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          result.innerHTML = '<p class="success">✓ CAMERA WORKS!</p><p><small>Video should appear and play for 5 seconds...</small></p>';
+          video.srcObject = stream;
+          video.style.display = 'block';
+          video.play();
+          
+          setTimeout(() => {
+            stream.getTracks().forEach(track => track.stop());
+            video.style.display = 'none';
+            result.innerHTML += '<p class="success">✓ Test complete - Camera is working!</p>';
+          }, 5000);
+        })
+        .catch(err => {
+          let msg = err.message;
+          if (err.name === 'NotAllowedError') msg = 'Permission denied - Allow camera in browser!';
+          else if (err.name === 'NotFoundError') msg = 'No camera found on device';
+          else if (err.name === 'NotReadableError') msg = 'Camera locked by another app';
+          
+          result.innerHTML = `<p class="error">✗ ${err.name}</p><p>${msg}</p>`;
+        });
+    }
+
+    function listCameras() {
+      const result = document.getElementById('result2');
+      result.innerHTML = '<p>Checking devices...</p>';
+      
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const cameras = devices.filter(d => d.kind === 'videoinput');
+          if (cameras.length === 0) {
+            result.innerHTML = '<p class="error">✗ No cameras detected</p>';
+          } else {
+            result.innerHTML = `<p class="success">✓ Found ${cameras.length} camera(s):</p>`;
+            cameras.forEach((cam, i) => {
+              result.innerHTML += `<p><small>${i + 1}. ${cam.label || 'Camera ' + i}</small></p>`;
+            });
+          }
+        })
+        .catch(err => {
+          result.innerHTML = `<p class="error">Error: ${err.message}</p>`;
+        });
+    }
+
+    function checkBrowser() {
+      const result = document.getElementById('result3');
+      const has = !!navigator.mediaDevices?.getUserMedia;
+      const browser = /Chrome/.test(navigator.userAgent) ? 'Chrome' :
+                      /Firefox/.test(navigator.userAgent) ? 'Firefox' :
+                      /Safari/.test(navigator.userAgent) ? 'Safari' : 'Other';
+      
+      result.innerHTML = `
+        <p>Browser: ${browser}</p>
+        <p class="${has ? 'success' : 'error'}">
+          Camera Support: ${has ? '✓ YES' : '✗ NO'}
+        </p>
+      `;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face Detector</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="app-container">
+    <div class="container">
+      <div class="app-header">
+        <h1>AI Face Detector</h1>
+      </div>
+
+      <div id="camera-section" class="camera-section">
+        <video id="video" autoplay muted playsinline width="500" height="400"></video>
+      </div>
+
+      <div class="status-section">
+        <p id="face-status" class="status">Loading models...</p>
+        <p id="lock-status" class="lock-indicator">🔓 Output Unlocked - Ready for Detection</p>
+      </div>
+
+      <div id="detection-result" class="detection-section" style="display: none;">
+        <div class="result-card">
+          <h2>Detection Results</h2>
+          <div class="result-item">
+            <span class="label">Age:</span>
+            <span id="age" class="value">--</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Group:</span>
+            <span id="age-group" class="value">--</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Gender:</span>
+            <span id="gender" class="value">--</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Emotion:</span>
+            <span id="emotion" class="value">--</span>
+          </div>
+        </div>
+
+        <div class="exact-output-box">
+          <h3>EXACT OUTPUT</h3>
+          <div class="exact-output-content">
+            <div id="exact-output" class="exact-text">
+              Age: --
+              Group: --
+              Gender: --
+              Emotion: --
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="action-section" class="action-buttons">
+        <button class="action-btn capture-btn" onclick="takeScreenshot()"
+          title="Capture current frame">Screenshot</button>
+        <button class="action-btn history-btn" onclick="getDetectionHistory()"
+          title="View detection history">History</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="history-modal" class="modal history-modal" style="display: none;">
+    <div class="modal-content history-content">
+      <span class="close" onclick="closeHistoryModal()">&times;</span>
+      <h2>Detection History</h2>
+      <div class="history-actions">
+        <button class="history-action-btn" onclick="exportDetectionsCSV()">Export CSV</button>
+        <button class="history-action-btn" onclick="exportDetectionsJSON()">Export JSON</button>
+        <button class="history-action-btn danger" onclick="clearDetectionHistory()">Clear</button>
+      </div>
+      <div id="history-summary" class="history-summary">No records yet.</div>
+      <div id="history-list" class="history-list"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
